@@ -11,7 +11,7 @@ class Vocation extends Validate {
 		'vo_sum_day' => 'require|number|between:0,300',
 	];
 
-	//暂时不需要，除非将TP5弹窗模板替换掉(微信手机不支持原生弹窗)
+	//暂时不需要，除非将TP5弹窗提醒模板替换掉(微信手机不支持原生弹窗)
 	protected $message = [
 		'uid.require' => '用户id不得为空！',
 		'uid.unique' => '用户id必须是数字！',

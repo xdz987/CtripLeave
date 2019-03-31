@@ -61,15 +61,11 @@ class Getauth extends Controller {
 				}
 
 				if ($no_exist) {
-					$no_exist['al_put'] = 0;
-					return json($no_exist); //成功返回用户id,和未提交0
+					$no_exist = array('id' => $no_exist);
+					return json($no_exist); //成功返回用户id
 				} else if ($exist) {
 					//判断是否提交过数据
-					$result = db('vocation')->field('uid')->where('uid', $exist['id'])->find();
-					if ($result) {
-						$exist['al_put'] = 1;
-					}
-					return json($exist); //成功返回用户id,和已提交1
+					return json($exist); //成功返回用户id
 				} else {
 					return 110; //数据保存失败，请联系后台检查！
 				}

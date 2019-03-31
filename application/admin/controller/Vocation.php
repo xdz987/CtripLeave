@@ -4,44 +4,20 @@ use think\Controller;
 
 class Vocation extends Controller {
 
-	//添加vocation数据    同时需要接收一个Openid作为用户信息查询
+	//接口http://47.94.23.112/CtripLeave/admin/Vocation/add
+	//添加vocation数据    同时需要接收一个uid作为用户信息查询
 	public function add() {
 		try {
 			if (request()->isPost()) {
-				$data = input('post.');
-
+				$data = file_get_contents('php://input');
+				$data = json_decode($data, true);
 				//validate验证post过来的数据
 				$validate = validate('vocation');
 				if (!$validate->scene('add')->check($data)) {
 					return 103; //非法输入
 				}
 
-				$vocation['uid'] = $data['uid'];
-				$vocation['industry'] = $data['industry'];
-				$vocation['vo_year_day'] = $data['vo_year_day'];
-				$vocation['vo_sum_day'] = $data['vo_sum_day'];
-
-				//查看vocation是否已插入基本信息，不存在则插入数据返回uid。	之所以存在不更新数据是因为会对ranking表不匹配，返回结果也不匹配
-				$exist = db('vocation')->field('uid')->where('uid', $data['uid'])->find();
-				if (!$exist) {
-					$save = db('vocation')->insert($vocation);
-				}
-
-				//排名运算,返回对应行业的整条数据，但不包括name，多了用户所在行业对应的字母
-				$rank = $this->ranking($vocation, $exist);
-
-				//查询用户姓名
-				$name = db('user')->field('nickname')->where('id', $data['uid'])->find();
-
-				//前端所需：总排行榜1、用户姓名1、用户对应行业1、用户所在行业排名1、所在行业总平均年假1、用户年假1，删除不需要数据
-				$rank['nickname'] = $name['nickname'];
-				$rank['vo_year_day'] = $vocation['vo_year_day'];
-				unset($rank['id']);
-				unset($rank['name']);
-				unset($rank['mem_sum']);
-				unset($rank['account_year_day']);
-				unset($rank['account_sum_day']);
-
+				$rank = $this->get_ranking($data);
 				return json($rank);
 			} else {
 				echo 104; //HTTP提交方式错误
@@ -51,14 +27,76 @@ class Vocation extends Controller {
 		}
 	}
 
-	//重选
-	/*public function re_opt() {
+	//接口http://47.94.23.112/CtripLeave/admin/Vocation/re_opt
+	//获取用户之前填写的vocation	  需要参数uid	前端跳转到add接口，提交时覆盖用户vocation数据，修改ranking数据
+	public function re_opt() {
+		try {
+			$data = file_get_contents('php://input');
+			$data = json_decode($data, true);
+			$user_vocation = db('vocation')->where('uid', $data['uid'])->find();
+			return json($user_vocation);
 
-	}*/
+		} catch (Exception $e) {
+			echo "添加失败,请返回重新提交!";
+		}
+	}
+
+	//接口//http://47.94.23.112/CtripLeave/admin/Vocation/user_ranking
+	//已经提交过vocation，直接获取ranking数据
+	public function user_ranking() {
+		try {
+			if (request()->isPost()) {
+				$data = file_get_contents('php://input');
+				$data = json_decode($data, true);
+				$user_vocation = db('vocation')->where('uid', $data['uid'])->find();
+				$rank = $this->get_ranking($user_vocation);
+				return json($rank);
+			} else {
+				echo 104; //HTTP提交方式错误
+			}
+
+		} catch (Exception $e) {
+			echo "添加失败,请返回重新提交!";
+		}
+	}
+
+	public function get_ranking($data) {
+
+		$vocation['uid'] = $data['uid'];
+		$vocation['industry'] = $data['industry'];
+		$vocation['vo_year_day'] = $data['vo_year_day'];
+		$vocation['vo_sum_day'] = $data['vo_sum_day'];
+
+		//防止多次增加数据和修改ranking表
+		//查看vocation是否已插入基本信息，不存在则插入数据。	存在则更新数据
+		$exist = db('vocation')->where('uid', $data['uid'])->find();
+		if (!$exist) {
+			$save = db('vocation')->insert($vocation);
+			//排名运算,返回对应行业的整条数据，但不包括name，多了用户所在行业对应的字母
+			$rank = $this->ranking($vocation, $exist);
+		} else {
+			$alter = db('vocation')->where('uid', $vocation['uid'])->update($vocation);
+			$rank = $this->ranking($vocation, $exist);
+		}
+
+		//查询用户姓名
+		$name = db('user')->field('nickname')->where('id', $data['uid'])->find();
+
+		//前端所需：总排行榜1、用户姓名1、用户对应行业1、用户所在行业排名1、所在行业总平均年假1、用户年假1，删除不需要数据
+		$rank['nickname'] = $name['nickname'];
+		$rank['vo_year_day'] = $vocation['vo_year_day'];
+		unset($rank['id']);
+		unset($rank['name']);
+		unset($rank['mem_sum']);
+		unset($rank['account_year_day']);
+		unset($rank['account_sum_day']);
+
+		return $rank;
+	}
 
 	//对POST过来的哪一行业进行筛选
 	public function ranking($vocation, $exist) {
-		//'A-J'对应'1-10'行业
+		//'A-J'对应'1-10'行业 		3月31日发现只需要在ranking表中加入个行业industry字段即可。。省心又省力
 		switch ($vocation['industry']) {
 		case 'A':
 			//传递第一个参数是行业，第二个参数是POST过来的值，第三个参数是用户是否插入过数据
@@ -122,7 +160,7 @@ class Vocation extends Controller {
 			return $rankRes;
 			break;
 		default:
-			return 105; //行业选择类型错误！
+			return false; //已经进行数据验证，实际不需要
 			break;
 		}
 	}
