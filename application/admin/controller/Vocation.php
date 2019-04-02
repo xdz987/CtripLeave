@@ -27,6 +27,11 @@ class Vocation extends Controller {
 	public function re_opt() {
 		$user_id = file_get_contents('php://input');
 		$user_id = json_decode($user_id, true);
+		//validate验证post过来的数据
+		$validate = validate('vocation');
+		if (!$validate->scene('re_opt')->check($user_id)) {
+			return 103; //非法输入
+		}
 		$user_vocation = db('user_vocation')->where('uid', $user_id['uid'])->find();
 		return json($user_vocation);
 	}
@@ -36,10 +41,15 @@ class Vocation extends Controller {
 	public function user_ranking() {
 		if (request()->isPost()) {
 			$user_id = file_get_contents('php://input');
-			$user_id = json_decode($user_vocation, true);
+			$user_id = json_decode($user_id, true);
+			//validate验证post过来的数据
+			$validate = validate('vocation');
+			if (!$validate->scene('user_ranking')->check($user_id)) {
+				return 103; //非法输入
+			}
 			$user_vocation = db('user_vocation')->where('uid', $user_id['uid'])->find();
-			$all_industry_ranking = $this->get_ranking($user_vocation);
-			return json($all_industy_ranking);
+			$all_industry_ranking = model('vocation')->get_ranking($user_vocation);
+			return json($all_industry_ranking);
 		} else {
 			echo 104; //HTTP提交方式错误
 		}

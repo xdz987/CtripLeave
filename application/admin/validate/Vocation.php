@@ -26,5 +26,7 @@ class Vocation extends Validate {
 
 	protected $scene = [
 		'add' => ['uid', 'industry', 'vo_year_day', 'vo_sum_day'],
+		're_opt' => ['uid'],
+		'user_ranking' => ['uid'],
 	];
 }
