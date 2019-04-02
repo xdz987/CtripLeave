@@ -7,8 +7,8 @@ class Vocation extends Validate {
 	protected $rule = [
 		'uid' => 'require|number|between:1,10000',
 		'industry' => 'require|^[A-J]+$|length:1,1',
-		'vo_year_day' => 'require|number|between:0,300',
-		'vo_sum_day' => 'require|number|between:0,300',
+		'vo_year_day' => 'require|number|between:0,365',
+		'vo_sum_day' => 'require|number|between:0,365',
 	];
 
 	//暂时不需要，除非将TP5弹窗提醒模板替换掉(微信手机不支持原生弹窗)

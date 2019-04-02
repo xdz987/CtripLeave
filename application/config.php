@@ -49,6 +49,20 @@ return [
 	// 控制器类后缀
 	'controller_suffix' => false,
 
+	//授权字段配置
+	//appid
+	'wxappid' => 'wx15c8f69da5dcbeff',
+	//appsecret
+	'wxappsecret' => '5582da8be8a94b31b7c886eb6d6c9413',
+	//回调地址
+	'wxredirect_url' => 'http://47.94.23.112/CtripLeave/admin/Getauth/getnews',
+	//返回类型
+	'response_type' => 'code',
+	//权限范围
+	'wxscope' => 'snsapi_userinfo',
+	//状态
+	'wxstate' => 'father',
+
 	// +----------------------------------------------------------------------
 	// | 模块设置
 	// +----------------------------------------------------------------------
